@@ -1,19 +1,21 @@
 package format
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 )
 
-type Format []*Block
+type Format []Field
 
 func (f *Format) Validate() error {
 	names := make(map[string]struct{})
 	for i, b := range *f {
 		if b.Name == "" {
-			return fmt.Errorf("block name cannot be empty. index: %d", i)
+			return fmt.Errorf("field name cannot be empty. index: %d", i)
 		}
 		if _, found := names[b.Name]; found {
-			return fmt.Errorf("duplicated block name. index: %d", i)
+			return fmt.Errorf("duplicated field name. index: %d", i)
 		}
 		if b.Size == nil && b.SizeRef == nil {
 			return fmt.Errorf("either size or sizeRef must be provided. index: %d", i)
@@ -40,16 +42,16 @@ func (f *Format) Validate() error {
 	return nil
 }
 
-type Block struct {
+type Field struct {
 	Name     string   `json:"name"`
-	Size     *int     `json:"size"`
+	Size     *uint64  `json:"size"`
 	SizeRef  *string  `json:"sizeRef"`
 	Encoding Encoding `json:"encoding"`
 	Type     Type     `json:"type"`
 }
 
-func (b *Block) IsVarSized() bool {
-	return b.SizeRef != nil
+func (f *Field) IsVarSized() bool {
+	return f.SizeRef != nil
 }
 
 type Type string
@@ -73,4 +75,17 @@ const (
 
 func (e Encoding) isValid() bool {
 	return e == LittleEndianEncoding || e == BigEndianEncoding
+}
+
+func ParseFormatFile(file string) (Format, error) {
+	f, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	var format Format
+	err = json.Unmarshal(f, &format)
+	if err != nil {
+		return nil, err
+	}
+	return format, nil
 }

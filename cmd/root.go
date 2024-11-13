@@ -13,7 +13,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "fmtdump",
 	Short: "formatted dump",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	RunE:  run,
 }
 
@@ -25,32 +25,34 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().StringP("file", "f", "", "path of the file")
+	rootCmd.Flags().StringP("format", "f", "", "path of the format file")
 }
 
 func run(cmd *cobra.Command, args []string) error {
-	f, err := format.ParseFormat(cmd.Flags().Args())
+	formatFile, err := cmd.Flags().GetString("format")
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(cmd.OutOrStderr(), "%s\n", f)
-
-	filePath, err := cmd.Flags().GetString("file")
+	f, err := format.ParseFormatFile(formatFile)
 	if err != nil {
 		return err
 	}
-	file, err := os.Open(filePath)
-	if err != nil {
+	if err := f.Validate(); err != nil {
 		return err
 	}
 
+	file, err := os.Open(cmd.Flags().Args()[0])
+	if err != nil {
+		return err
+	}
 	p := parse.NewParser(file, f)
+
 	for data, err := p.Next(); err != io.EOF; data, err = p.Next() {
 		if err != nil {
 			return err
 		}
 		for _, d := range data {
-			fmt.Fprintf(cmd.OutOrStdout(), "%s: %x\n", d.Block.Name, d.Value)
+			fmt.Fprintf(cmd.OutOrStdout(), "%s: %x\n", d.Field.Name, d.Value)
 		}
 	}
 

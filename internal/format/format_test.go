@@ -23,3 +23,16 @@ func TestParseFormat(t *testing.T) {
 		t.Error("expected 3 blocks, got", len(format))
 	}
 }
+
+func TestParseFormatFile(t *testing.T) {
+	f, err := ParseFormatFile("./testdata/format.json")
+	if err != nil {
+		t.Error(err)
+	}
+	if err := f.Validate(); err != nil {
+		t.Error(err)
+	}
+	if len(f) != 3 {
+		t.Error("expected 3 blocks, got", len(f))
+	}
+}
