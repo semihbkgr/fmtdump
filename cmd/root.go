@@ -47,13 +47,15 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	p := parse.NewParser(file, f)
 
-	for data, err := p.Next(); err != io.EOF; data, err = p.Next() {
+	for entry, err := p.Next(); err != io.EOF; entry, err = p.Next() {
 		if err != nil {
 			return err
 		}
-		for _, d := range data {
-			fmt.Fprintf(cmd.OutOrStdout(), "%s: %x\n", d.Field.Name, d.Value)
+		s, err := entry.String()
+		if err != nil {
+			return err
 		}
+		fmt.Fprintln(cmd.OutOrStdout(), s)
 	}
 
 	return nil

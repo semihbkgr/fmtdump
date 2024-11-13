@@ -34,7 +34,7 @@ func (f *Format) Validate() error {
 		if !b.Type.isValid() {
 			return fmt.Errorf("invalid type '%s'. index: %d", b.Type, i)
 		}
-		if b.Encoding.isValid() {
+		if !b.Encoding.isValid() {
 			return fmt.Errorf("invalid encoding '%s'. index: %d", b.Encoding, i)
 		}
 		names[b.Name] = struct{}{}
@@ -69,8 +69,8 @@ func (t Type) isValid() bool {
 type Encoding string
 
 const (
-	LittleEndianEncoding Encoding = "LittleEndian"
-	BigEndianEncoding    Encoding = "BigEndian"
+	LittleEndianEncoding Encoding = "littleEndian"
+	BigEndianEncoding    Encoding = "bigEndian"
 )
 
 func (e Encoding) isValid() bool {
