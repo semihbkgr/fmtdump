@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/semihbkgr/fmtdump/internal/format"
+	"github.com/semihbkgr/fmtdump/internal/parse"
 	"github.com/spf13/cobra"
 )
 
@@ -32,5 +34,25 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	fmt.Fprintf(cmd.OutOrStderr(), "%s\n", f)
+
+	filePath, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return err
+	}
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+
+	p := parse.NewParser(file, f)
+	for data, err := p.Next(); err != io.EOF; data, err = p.Next() {
+		if err != nil {
+			return err
+		}
+		for _, d := range data {
+			fmt.Fprintf(cmd.OutOrStdout(), "%s: %x\n", d.Block.Name, d.Value)
+		}
+	}
+
 	return nil
 }
