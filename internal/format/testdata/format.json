@@ -1,0 +1,19 @@
+[
+    {
+        "name": "crc",
+        "size": 4,
+        "type": "bytes"
+    },
+    {
+        "name": "len",
+        "size": 2,
+        "encoding": "littleEndian",
+        "type": "int"
+    },
+    {
+        "name": "payload",
+        "sizeRef": "len",
+        "encoding": "littleEndian",
+        "type": "string"
+    }
+]

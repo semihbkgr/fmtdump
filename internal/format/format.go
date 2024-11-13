@@ -1,94 +1,76 @@
 package format
 
 import (
-	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 )
 
-type Format struct {
-	Blocks []*Block
-}
+type Format []*Block
 
-func ParseFormat(blocks []string) (*Format, error) {
-	format := Format{
-		Blocks: make([]*Block, 0, len(blocks)),
-	}
-	for _, block := range blocks {
-		b, err := ParseBlock(block)
-		if err != nil {
-			return nil, err
+func (f *Format) Validate() error {
+	names := make(map[string]struct{})
+	for i, b := range *f {
+		if b.Name == "" {
+			return fmt.Errorf("block name cannot be empty. index: %d", i)
 		}
-		if !b.Size.IsLiteral() && !format.HasBlock(b.Size.Reference) {
-			return nil, fmt.Errorf("referenced block not exists, %s", b.Size.Reference)
+		if _, found := names[b.Name]; found {
+			return fmt.Errorf("duplicated block name. index: %d", i)
 		}
-		format.Blocks = append(format.Blocks, b)
-	}
-	return &format, nil
-}
-
-func (f *Format) HasBlock(n string) bool {
-	for _, b := range f.Blocks {
-		if b.Name == n {
-			return true
+		if b.Size == nil && b.SizeRef == nil {
+			return fmt.Errorf("either size or sizeRef must be provided. index: %d", i)
 		}
-	}
-	return false
-}
-
-func (f *Format) String() string {
-	var s strings.Builder
-	for _, b := range f.Blocks {
-		if b.Size.IsLiteral() {
-			s.WriteString(fmt.Sprintf("%s=%d\n", b.Name, b.Size.Size))
-		} else {
-			s.WriteString(fmt.Sprintf("%s=%s\n", b.Name, b.Size.Reference))
+		if b.Size != nil && b.SizeRef != nil {
+			return fmt.Errorf("both size and sizeRef cannot be provided. index: %d", i)
 		}
+		if b.SizeRef != nil {
+			if _, found := names[*b.SizeRef]; !found {
+				return fmt.Errorf("sizeRef '%s' does not exist. index: %d", *b.SizeRef, i)
+			}
+		}
+		if b.Size != nil && *b.Size < 1 {
+			return fmt.Errorf("size must be greater than 0. index: %d", i)
+		}
+		if !b.Type.isValid() {
+			return fmt.Errorf("invalid type '%s'. index: %d", b.Type, i)
+		}
+		if b.Encoding.isValid() {
+			return fmt.Errorf("invalid encoding '%s'. index: %d", b.Encoding, i)
+		}
+		names[b.Name] = struct{}{}
 	}
-	return s.String()
+	return nil
 }
 
 type Block struct {
-	Name string
-	Size *BlockSize
+	Name     string   `json:"name"`
+	Size     *int     `json:"size"`
+	SizeRef  *string  `json:"sizeRef"`
+	Encoding Encoding `json:"encoding"`
+	Type     Type     `json:"type"`
 }
 
-func ParseBlock(block string) (*Block, error) {
-	name, sizeStr, found := strings.Cut(block, "=")
-	if !found {
-		return nil, errors.New("error on parsing the format")
-	}
-	size, err := ParseBlockSize(sizeStr)
-	if err != nil {
-		return nil, err
-	}
-	return &Block{
-		Name: name,
-		Size: size,
-	}, nil
+func (b *Block) IsVarSized() bool {
+	return b.SizeRef != nil
 }
 
-type BlockSize struct {
-	Size      uint
-	Reference string
+type Type string
+
+const (
+	IntType    Type = "int"
+	StringType Type = "string"
+	BytesType  Type = "bytes"
+)
+
+func (t Type) isValid() bool {
+	return t == IntType || t == StringType || t == BytesType
 }
 
-func ParseBlockSize(s string) (*BlockSize, error) {
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return &BlockSize{
-			Reference: s,
-		}, nil
-	}
-	if i < 1 {
-		return nil, errors.New("block size must be a positive value")
-	}
-	return &BlockSize{
-		Size: uint(i),
-	}, nil
-}
+type Encoding string
 
-func (s *BlockSize) IsLiteral() bool {
-	return s.Size > 0
+const (
+	LittleEndianEncoding Encoding = "LittleEndian"
+	BigEndianEncoding    Encoding = "BigEndian"
+)
+
+func (e Encoding) isValid() bool {
+	return e == LittleEndianEncoding || e == BigEndianEncoding
 }
