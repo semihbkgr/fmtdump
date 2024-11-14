@@ -11,10 +11,11 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "fmtdump",
-	Short: "formatted dump",
-	Args:  cobra.ExactArgs(1),
-	RunE:  run,
+	Use:                   "fmtdump --format=<format.json> <data-file>",
+	Short:                 "Flexible data file dump tool for custom formats",
+	DisableFlagsInUseLine: true,
+	Args:                  cobra.ExactArgs(1),
+	RunE:                  run,
 }
 
 func Execute() {
