@@ -2,11 +2,18 @@
     {
         "name": "crc",
         "size": 4,
-        "type": "bytes"
+        "type": "bytes",
+        "encoding": "littleEndian"
     },
     {
         "name": "len",
         "size": 2,
+        "encoding": "littleEndian",
+        "type": "int"
+    },
+    {
+        "name": "type",
+        "size": 1,
         "encoding": "littleEndian",
         "type": "int"
     },

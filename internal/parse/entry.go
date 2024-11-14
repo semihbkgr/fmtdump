@@ -79,7 +79,7 @@ func (d Data) ValueString() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("%x", b), nil
+		return fmt.Sprintf("%v", b), nil
 	}
 	return "", fmt.Errorf("unsupported")
 }
