@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 
 	"github.com/semihbkgr/fmtdump/internal/format"
 	"github.com/semihbkgr/fmtdump/internal/parse"
@@ -16,6 +17,7 @@ var rootCmd = &cobra.Command{
 	DisableFlagsInUseLine: true,
 	Args:                  cobra.ExactArgs(1),
 	RunE:                  run,
+	Version:               version(),
 }
 
 func Execute() {
@@ -60,4 +62,13 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func version() string {
+	//todo
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+	return info.Main.Version
 }

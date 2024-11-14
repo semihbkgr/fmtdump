@@ -2,6 +2,12 @@
 
 `fmtdump` is a flexible data file dump tool for custom-formatted binary files. Designed to simplify the inspection of database internals and other structured binary files, fmtdump enables the parsing and display of data layouts in files such as WAL, LSM, and other database-specific formats. With fmtdump, binary file contents can be analyzed and troubleshooted by viewing data according to predefined structures.
 
+## Installation
+
+```shell
+$ go install github.com/semihbkgr/fmtdump@latest
+```
+
 ```txt
 Flexible data file dump tool for custom formats
 
