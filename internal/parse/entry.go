@@ -3,6 +3,7 @@ package parse
 import (
 	"encoding/binary"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/semihbkgr/fmtdump/internal/format"
@@ -26,8 +27,11 @@ func (e Entry) data(n string) *Data {
 
 func (e Entry) String() (string, error) {
 	b := strings.Builder{}
+	p := len(slices.MaxFunc(e, func(a, b Data) int {
+		return len(a.Field.Name) - len(b.Field.Name)
+	}).Field.Name)
 	for _, d := range e {
-		s, err := d.String()
+		s, err := d.String(p)
 		if err != nil {
 			return "", err
 		}
@@ -36,12 +40,12 @@ func (e Entry) String() (string, error) {
 	return b.String(), nil
 }
 
-func (d Data) String() (string, error) {
+func (d Data) String(p int) (string, error) {
 	s, err := d.ValueString()
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s = %s", d.Field.Name, s), nil
+	return fmt.Sprintf("%s| %*s: %s", hexRawBytes(d.Value), p, d.Field.Name, s), nil
 }
 
 func (d Data) ValueString() (string, error) {
@@ -85,4 +89,15 @@ func binaryEndian(e format.Encoding) binary.ByteOrder {
 		return binary.LittleEndian
 	}
 	return binary.BigEndian
+}
+
+func hexRawBytes(bytes []byte) string {
+	s := strings.Builder{}
+	for i, b := range bytes {
+		s.WriteString(fmt.Sprintf("%02x ", b))
+		if i+1%8 == 0 && i != len(bytes)-1 {
+			s.WriteString("\n")
+		}
+	}
+	return fmt.Sprintf("%-24s", s.String())
 }

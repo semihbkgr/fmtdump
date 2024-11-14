@@ -2,8 +2,8 @@ package parse
 
 import "fmt"
 
-func uintBySize(s uint64) (any, error) {
-	switch s {
+func uintBySize(b uint64) (any, error) {
+	switch b {
 	case 1:
 		{
 			var i uint8
@@ -27,13 +27,13 @@ func uintBySize(s uint64) (any, error) {
 	default:
 		{
 			//todo
-			return nil, fmt.Errorf("the len of the referenced field is not supported. size: %d", s)
+			return nil, fmt.Errorf("the len of the referenced field is not supported. size: %d", b)
 		}
 	}
 }
 
-func anyToInt64(a any) (uint64, error) {
-	switch v := a.(type) {
+func anyToInt64(i any) (uint64, error) {
+	switch v := i.(type) {
 	case *uint8:
 		return uint64(*v), nil
 	case *uint16:
